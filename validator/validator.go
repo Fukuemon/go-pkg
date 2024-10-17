@@ -22,6 +22,7 @@ func InitValidator(customMsgFunc func(field, tag string) string) {
 	customErrorMessages = customMsgFunc
 }
 
+// 構造体（Body）のバリデーションを実行する
 func StructValidation(s interface{}) error {
 	if validate == nil {
 		return errors.New("validator is not initialized")
@@ -39,6 +40,7 @@ func StructValidation(s interface{}) error {
 	return nil
 }
 
+// 構造体バリデーション時のエラーメッセージを生成する
 func ValidationError(ve validator.ValidationErrors) error {
 	errorMessages := make([]string, len(ve))
 	for i, fieldErr := range ve {
