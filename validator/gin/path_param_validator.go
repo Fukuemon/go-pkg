@@ -13,14 +13,14 @@ import (
 var tagErrorMessages map[string]string
 
 func InitTagErrorMessages(customMessages map[string]string) {
-
 	// タグごとのデフォルトエラーメッセージ
 	tagErrorMessages = map[string]string{
-		"required": "このフィールドは必須です",
-		"ulid":     "無効なULID形式です",
-		"int":      "無効な整数形式です",
+		"required": "{field}は必須です",
+		"ulid":     "{field}は無効なULID形式です",
+		"int":      "{field}は無効な整数形式です",
 	}
 
+	// カスタムメッセージを上書き
 	for tag, message := range customMessages {
 		if message != "" {
 			tagErrorMessages[tag] = message
@@ -81,27 +81,24 @@ func PathParamSingleValidation(paramName, paramValue, tag string) error {
 	switch tag {
 	case "required":
 		if paramValue == "" {
-			return errors.New(getTagErrorMessage(tag))
+			return errors.New(getTagErrorMessage(paramName, tag))
 		}
 	case "ulid":
 		if !ulid.IsValid(paramValue) {
-			return errors.New(getTagErrorMessage(tag))
+			return errors.New(getTagErrorMessage(paramName, tag))
 		}
 	case "int":
 		if _, err := strconv.Atoi(paramValue); err != nil {
-			return errors.New(getTagErrorMessage(tag))
+			return errors.New(getTagErrorMessage(paramName, tag))
 		}
 	default:
-		return errors.New(getTagErrorMessage(tag))
+		return errors.New(getTagErrorMessage(paramName, tag))
 	}
 	return nil
 }
 
 // 各バリデーションタグに対するエラーメッセージを返す
-func getTagErrorMessage(tag string) string {
-	if message, exists := tagErrorMessages[tag]; exists {
-		return message
-	}
-	// タグが存在しない場合のデフォルトメッセージ
-	return tag + " に対応するエラーメッセージがありません"
+func getTagErrorMessage(paramName, tag string) string {
+	message := tagErrorMessages[tag]
+	return strings.ReplaceAll(message, "{field}", paramName)
 }
