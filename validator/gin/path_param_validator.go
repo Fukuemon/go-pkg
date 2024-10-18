@@ -33,30 +33,31 @@ type ParamValidation struct {
 	ParamName  string
 	ParamValue string
 	Rules      []string
-	Err        error
 }
 
 // 単一のパスパラメータに対するバリデーション
 func Param(ctx *gin.Context, paramName string, rules ...string) ParamValidation {
 	paramValue := ctx.Param(paramName)
 
-	// バリデーション実行
-	var validationErr error
-	for _, rule := range rules {
-		rule = strings.TrimSpace(rule)
-		if err := PathParamSingleValidation(paramName, paramValue, rule); err != nil {
-			validationErr = err
-			break
-		}
-	}
-
 	// ParamValidation構造体に結果を格納
 	return ParamValidation{
 		ParamName:  paramName,
 		ParamValue: paramValue,
 		Rules:      rules,
-		Err:        validationErr,
 	}
+}
+
+func (param *ParamValidation) ParamValidate() error {
+	var validationErr error
+	for _, rule := range param.Rules {
+		rule = strings.TrimSpace(rule)
+		if err := PathParamSingleValidation(param.ParamName, param.ParamValue, rule); err != nil {
+			validationErr = err
+			break
+		}
+	}
+
+	return validationErr
 }
 
 // 複数のパスパラメータに対するバリデーション
@@ -64,8 +65,9 @@ func ParamsValidation(params ...ParamValidation) error {
 	var validationErrors []string
 
 	for _, param := range params {
-		if param.Err != nil {
-			validationErrors = append(validationErrors, param.Err.Error())
+		err := param.ParamValidate()
+		if err != nil {
+			validationErrors = append(validationErrors, err.Error())
 		}
 	}
 
